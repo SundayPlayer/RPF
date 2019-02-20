@@ -7,7 +7,6 @@ use FastRoute\RouteCollector;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Response;
 use React\Http\Server;
-use React\MySQL\QueryResult;
 use React\Socket\Server as SocketServer;
 use React\MySQL\Factory as MySQLFactory;
 use React\EventLoop\Factory as EventLoopFactory;
@@ -25,53 +24,20 @@ $db->ping()->then(function () {
 
 $actions = [];
 
-$hello = function () {
-    return new Response(200, ['Content-Type' => 'text/plain'], 'Hello');
-};
+// Import DefaultController
+$defaultController = new \App\Controller\DefaultController();
+$defaultActions = $defaultController->getActions();
+$actions = array_merge($actions, $defaultActions);
 
-$actions[] = [
-    'method' => 'GET',
-    'route' => '/',
-    'callback' => $hello,
-];
-
-$listUsers = function () use ($db) {
-    return $db->query('SELECT * FROM `user` ORDER BY id')
-        ->then(function (QueryResult $queryResult) {
-            $users = json_encode($queryResult->resultRows);
-
-            return new Response(200, ['Content-type' => 'application/json'], $users);
-        });
-};
-
-$actions[] = [
-    'method' => 'GET',
-    'route' => '/users',
-    'callback' => $listUsers,
-];
-
-$createUser = function (ServerRequestInterface $request) use ($db) {
-    $user = $request->getParsedBody();
-
-    return $db->query('INSERT INTO `user` (`name`, `email`) VALUES (?, ?)', $user)
-        ->then(function () {
-            return new Response(201);
-        }, function (Exception $e) {
-            return new Response(
-                400, ['Content-Type' => 'application/json'], json_encode(['error' => $e->getMessage()])
-            );
-        });
-};
-
-$actions[] = [
-    'method' => 'POST',
-    'route' => '/user',
-    'callback' => $createUser,
-];
+// Import User Controller
+$userController = new \App\Controller\UserController(new \App\Repository\UserRepository($db));
+$userActions = $userController->getActions();
+$actions = array_merge($actions, $userActions);
 
 $dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $routes) use ($actions) {
     foreach ($actions as $action) {
-        $routes->addRoute($action['method'], $action['route'], $action['callback']);
+        $routes->addRoute($action['method'], $action['route'], [$action['object'], $action['action']]);
+        echo "method : {$action['method']}, route : {$action['route']}, action : {$action['action']}" . PHP_EOL;
     }
 });
 
