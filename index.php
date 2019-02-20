@@ -50,6 +50,25 @@ $actions[] = [
     'callback' => $listUsers,
 ];
 
+$createUser = function (ServerRequestInterface $request) use ($db) {
+    $user = $request->getParsedBody();
+
+    return $db->query('INSERT INTO `user` (`name`, `email`) VALUES (?, ?)', $user)
+        ->then(function () {
+            return new Response(201);
+        }, function (Exception $e) {
+            return new Response(
+                400, ['Content-Type' => 'application/json'], json_encode(['error' => $e->getMessage()])
+            );
+        });
+};
+
+$actions[] = [
+    'method' => 'POST',
+    'route' => '/user',
+    'callback' => $createUser,
+];
+
 $dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $routes) use ($actions) {
     foreach ($actions as $action) {
         $routes->addRoute($action['method'], $action['route'], $action['callback']);
