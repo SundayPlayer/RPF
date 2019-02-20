@@ -23,9 +23,17 @@ $db->ping()->then(function () {
     echo 'MySQL connection Error: ' . $e->getMessage() . PHP_EOL;
 });
 
+$actions = [];
+
 $hello = function () {
     return new Response(200, ['Content-Type' => 'text/plain'], 'Hello');
 };
+
+$actions[] = [
+    'method' => 'GET',
+    'route' => '/',
+    'callback' => $hello,
+];
 
 $listUsers = function () use ($db) {
     return $db->query('SELECT * FROM `user` ORDER BY id')
@@ -36,9 +44,16 @@ $listUsers = function () use ($db) {
         });
 };
 
-$dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $routes) use ($hello, $listUsers) {
-    $routes->addRoute('GET', '/', $hello);
-    $routes->addRoute('GET', '/users', $listUsers);
+$actions[] = [
+    'method' => 'GET',
+    'route' => '/users',
+    'callback' => $listUsers,
+];
+
+$dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $routes) use ($actions) {
+    foreach ($actions as $action) {
+        $routes->addRoute($action['method'], $action['route'], $action['callback']);
+    }
 });
 
 $server = new Server(function (ServerRequestInterface $request) use ($dispatcher) {
