@@ -2,19 +2,24 @@
 
 require_once 'vendor/autoload.php';
 
+use App\Controller\DefaultController;
+use App\Controller\UserController;
+use App\Core\Persistence\MySQL;
+use App\Core\Service\ConfigParser;
+use App\Repository\UserRepository;
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Response;
 use React\Http\Server;
 use React\Socket\Server as SocketServer;
-use React\MySQL\Factory as MySQLFactory;
 use React\EventLoop\Factory as EventLoopFactory;
 
-$loop = EventLoopFactory::create();
-$mysqlFactory = new MySQLFactory($loop);
+// Get parameters
+$parameters = ConfigParser::parameters('config/parameters.yml');
 
-$db = $mysqlFactory->createLazyConnection('root:root@localhost/react_php');
+$loop = EventLoopFactory::create();
+$db = MySQL::initLazyConnection($parameters['parameters']['database'], $loop);
 
 $db->ping()->then(function () {
     echo 'MySQL connection OK' . PHP_EOL;
@@ -25,12 +30,12 @@ $db->ping()->then(function () {
 $actions = [];
 
 // Import DefaultController
-$defaultController = new \App\Controller\DefaultController();
+$defaultController = new DefaultController();
 $defaultActions = $defaultController->getActions();
 $actions = array_merge($actions, $defaultActions);
 
 // Import User Controller
-$userController = new \App\Controller\UserController(new \App\Repository\UserRepository($db));
+$userController = new UserController(new UserRepository($db));
 $userActions = $userController->getActions();
 $actions = array_merge($actions, $userActions);
 

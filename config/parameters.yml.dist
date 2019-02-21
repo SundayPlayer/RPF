@@ -1,0 +1,7 @@
+parameters:
+    database:
+        username: root
+        password: null
+        host: localhost
+        port: 3306
+        dbname: react_php
