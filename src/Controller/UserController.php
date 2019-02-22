@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Core\Controller\Controller;
 use App\Core\Http\JsonResponse;
 use App\Entity\User;
+use App\Exception\User\UserNotFoundException;
 use App\Repository\UserRepository;
 use Exception;
 use Psr\Http\Message\ServerRequestInterface;
@@ -30,7 +31,7 @@ class UserController extends Controller
     /**
      * @return PromiseInterface
      */
-    public function getAll()
+    public function getAll(): PromiseInterface
     {
         $promise = $this->userRepository->getAll();
 
@@ -40,11 +41,21 @@ class UserController extends Controller
             });
     }
 
+    public function getUser(ServerRequestInterface $request, string $id): PromiseInterface
+    {
+        return $this->userRepository->find($id)
+            ->then(function (array $user) {
+                return JsonResponse::ok(['user' => json_encode($user)]);
+            }, function (UserNotFoundException $error) {
+                return JsonResponse::notFound($error->getMessage());
+            });
+    }
+
     /**
      * @param ServerRequestInterface $request
      * @return PromiseInterface
      */
-    public function createUser(ServerRequestInterface $request)
+    public function createUser(ServerRequestInterface $request): PromiseInterface
     {
         $body = $request->getParsedBody();
 

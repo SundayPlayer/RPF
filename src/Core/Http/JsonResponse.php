@@ -21,6 +21,11 @@ class JsonResponse extends Response
         parent::__construct($statusCode, $headers, $body);
     }
 
+    public static function ok(array $response = []): self
+    {
+        return new self(200, $response);
+    }
+
     /**
      * @return JsonResponse
      */
@@ -36,5 +41,14 @@ class JsonResponse extends Response
     public static function badRequest(string $error): self
     {
         return new self(400, ['error' => $error]);
+    }
+
+    /**
+     * @param string $error
+     * @return JsonResponse
+     */
+    public static function notFound(string $error): self
+    {
+        return new self(404, ['error' => $error]);
     }
 }

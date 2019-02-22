@@ -8,3 +8,4 @@ user_controller:
     actions:
         - { method: 'GET', route: '/users', action: 'getAll' }
         - { method: 'POST', route: '/user', action: 'createUser' }
+        - { method: 'GET', route: '/user/{id}', action: 'getUser' }
