@@ -13,8 +13,7 @@ use React\Socket\Server as SocketServer;
 use React\EventLoop\Factory as EventLoopFactory;
 
 // Get configuration
-$parameters = ConfigParser::parameters('config/parameters.yml');
-$controllers = ConfigParser::parameters('config/controllers.yml');
+$config = ConfigParser::parameters('config/config.yml', 'config/');
 
 $debug = true;
 
@@ -22,8 +21,8 @@ $container = Container::getContainer();
 
 // Creation of needed services
 $container->add('loop', EventLoopFactory::create());
-$container->add('db', MySQL::initLazyConnection($parameters['database'], $container->get('loop')));
-$container->add('dispatcher', Dispatcher::getDispatcher($controllers, $debug));
+$container->add('db', MySQL::initLazyConnection($config['parameters']['database'], $container->get('loop')));
+$container->add('dispatcher', Dispatcher::getDispatcher($config['controllers'], $debug));
 
 if ($debug) {
     // Test db connection

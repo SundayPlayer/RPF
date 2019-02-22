@@ -39,8 +39,10 @@ final class Container extends \League\Container\Container
      */
     public function getService(string $service)
     {
-        if (!isset($this->services))
-            $this->services = ConfigParser::parameters('config/services.yml');
+        if (!isset($this->services)) {
+            $servicesDocument = ConfigParser::parameters('config/services.yml');
+            $this->services = $servicesDocument['services'];
+        }
 
         if ($this->has($service))
             return $this->get($service);

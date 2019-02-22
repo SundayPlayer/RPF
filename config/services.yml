@@ -1,12 +1,13 @@
-# Controllers
-default_controller:
-    class: App\Controller\DefaultController
+services:
+    # Controllers
+    default_controller:
+        class: App\Controller\DefaultController
 
-user_controller:
-    class: App\Controller\UserController
-    parameters: ['user_repository']
+    user_controller:
+        class: App\Controller\UserController
+        parameters: ['user_repository']
 
-# Repositories
-user_repository:
-    class: App\Repository\UserRepository
-    parameters: ['db']
+    # Repositories
+    user_repository:
+        class: App\Repository\UserRepository
+        parameters: ['db']

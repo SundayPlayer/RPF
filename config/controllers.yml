@@ -1,11 +1,12 @@
-default_controller:
-    service: 'default_controller'
-    actions:
-        - { method: 'GET', route: '/', action: 'hello' }
+controllers:
+    default_controller:
+        service: 'default_controller'
+        actions:
+            - { method: 'GET', route: '/', action: 'hello' }
 
-user_controller:
-    service: 'user_controller'
-    actions:
-        - { method: 'GET', route: '/users', action: 'getAll' }
-        - { method: 'POST', route: '/user', action: 'createUser' }
-        - { method: 'GET', route: '/user/{id}', action: 'getUser' }
+    user_controller:
+        service: 'user_controller'
+        actions:
+            - { method: 'GET', route: '/users', action: 'getAll' }
+            - { method: 'POST', route: '/user', action: 'createUser' }
+            - { method: 'GET', route: '/user/{id}', action: 'getUser' }
