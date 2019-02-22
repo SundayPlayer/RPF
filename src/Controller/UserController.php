@@ -45,7 +45,7 @@ class UserController extends Controller
     {
         return $this->userRepository->find($id)
             ->then(function (array $user) {
-                return JsonResponse::ok(['user' => json_encode($user)]);
+                return JsonResponse::ok(['user' => $user]);
             }, function (UserNotFoundException $error) {
                 return JsonResponse::notFound($error->getMessage());
             });
