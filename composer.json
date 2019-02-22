@@ -3,8 +3,9 @@
         "react/http": "^0.8.4",
         "react/mysql": "^0.5.2",
         "nikic/fast-route": "^1.3",
-      "ext-json": "*",
-      "ext-yaml": "*"
+        "ext-json": "*",
+        "ext-yaml": "*",
+        "league/container": "^3.2"
     },
     "autoload": {
         "psr-4": {

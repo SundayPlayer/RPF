@@ -2,68 +2,58 @@
 
 require_once 'vendor/autoload.php';
 
-use App\Controller\DefaultController;
-use App\Controller\UserController;
+use App\Core\Dispatcher\Dispatcher;
 use App\Core\Persistence\MySQL;
 use App\Core\Service\ConfigParser;
-use App\Repository\UserRepository;
-use FastRoute\Dispatcher;
-use FastRoute\RouteCollector;
+use App\Core\Service\Container;
 use Psr\Http\Message\ServerRequestInterface;
 use React\Http\Response;
 use React\Http\Server;
 use React\Socket\Server as SocketServer;
 use React\EventLoop\Factory as EventLoopFactory;
 
-// Get parameters
+// Get configuration
 $parameters = ConfigParser::parameters('config/parameters.yml');
+$controllers = ConfigParser::parameters('config/controllers.yml');
 
-$loop = EventLoopFactory::create();
-$db = MySQL::initLazyConnection($parameters['parameters']['database'], $loop);
+$debug = true;
 
-$db->ping()->then(function () {
-    echo 'MySQL connection OK' . PHP_EOL;
-}, function (Exception $e) {
-    echo 'MySQL connection Error: ' . $e->getMessage() . PHP_EOL;
-});
+$container = Container::getContainer();
 
-$actions = [];
+// Creation of needed services
+$container->add('loop', EventLoopFactory::create());
+$container->add('db', MySQL::initLazyConnection($parameters['database'], $container->get('loop')));
+$container->add('dispatcher', Dispatcher::getDispatcher($controllers, $debug));
 
-// Import DefaultController
-$defaultController = new DefaultController();
-$defaultActions = $defaultController->getActions();
-$actions = array_merge($actions, $defaultActions);
+if ($debug) {
+    // Test db connection
+    $container->get('db')->ping()->then(function () {
+        echo 'MySQL connection OK' . PHP_EOL;
+    }, function (Exception $e) {
+        echo 'MySQL connection Error: ' . $e->getMessage() . PHP_EOL;
+    });
+}
 
-// Import User Controller
-$userController = new UserController(new UserRepository($db));
-$userActions = $userController->getActions();
-$actions = array_merge($actions, $userActions);
+$server = new Server(function (ServerRequestInterface $request) {
+    $dispatcher = Container::getContainer()->get('dispatcher');
 
-$dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $routes) use ($actions) {
-    foreach ($actions as $action) {
-        $routes->addRoute($action['method'], $action['route'], [$action['object'], $action['action']]);
-        echo "method : {$action['method']}, route : {$action['route']}, action : {$action['action']}" . PHP_EOL;
-    }
-});
-
-$server = new Server(function (ServerRequestInterface $request) use ($dispatcher) {
     $routeInfo = $dispatcher->dispatch($request->getMethod(), $request->getUri()->getPath());
 
     switch ($routeInfo[0]) {
-        case Dispatcher::NOT_FOUND:
+        case \FastRoute\Dispatcher::NOT_FOUND:
             return new Response(404, ['Content-Type' => 'text/plain'], 'Not found');
-        case Dispatcher::FOUND:
+        case \FastRoute\Dispatcher::FOUND:
             $params = $routeInfo[2] ?? [];
             return $routeInfo[1]($request, ... array_values($params));
-        case Dispatcher::METHOD_NOT_ALLOWED:
+        case \FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
             return new Response(405, ['Content-Type' => 'text/plain'], 'Method not allowed');
         default:
-            throw new LogicException();
+            throw new LogicException;
     }
 });
 
-$socket = new SocketServer('127.0.0.1:8080', $loop);
+$socket = new SocketServer('127.0.0.1:8080', $container->get('loop'));
 $server->listen($socket);
 
 echo 'Listening on ' . str_replace('tcp:', 'http:', $socket->getAddress()) . PHP_EOL;
-$loop->run();
+$container->get('loop')->run();

@@ -17,14 +17,6 @@ class UserController extends Controller
      */
     private $userRepository;
 
-    public function getActions(): array
-    {
-        return [
-            ['method' => 'GET', 'route' => '/users', 'action' => 'getAll', 'object' => $this],
-            ['method' => 'POST', 'route' => '/user', 'action' => 'createUser', 'object' => $this],
-        ];
-    }
-
     /**
      * UserController constructor.
      *
@@ -36,10 +28,9 @@ class UserController extends Controller
     }
 
     /**
-     * @param ServerRequestInterface $request
      * @return PromiseInterface
      */
-    public function getAll(ServerRequestInterface $request)
+    public function getAll()
     {
         $promise = $this->userRepository->getAll();
 
@@ -49,6 +40,10 @@ class UserController extends Controller
             });
     }
 
+    /**
+     * @param ServerRequestInterface $request
+     * @return PromiseInterface
+     */
     public function createUser(ServerRequestInterface $request)
     {
         $body = $request->getParsedBody();
