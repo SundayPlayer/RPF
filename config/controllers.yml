@@ -10,3 +10,4 @@ controllers:
             - { method: 'GET', route: '/users', action: 'getAll' }
             - { method: 'POST', route: '/user', action: 'createUser' }
             - { method: 'GET', route: '/user/{id}', action: 'getUser' }
+            - { method: 'PUT', route: '/user/{id}', action: 'updateUser' }

@@ -66,7 +66,49 @@ class UserController extends Controller
 
         return $this->userRepository->insert($user)
             ->then(
-                function () { return JsonResponse::created(); },
-                function (Exception $e) { return JsonResponse::badRequest($e->getMessage()); });
+                function () {
+                    return JsonResponse::created();
+                },
+                function (Exception $e) {
+                    return JsonResponse::badRequest($e->getMessage());
+                });
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @param string $id
+     * @return JsonResponse|PromiseInterface
+     */
+    public function updateUser(ServerRequestInterface $request, string $id)
+    {
+        $name = $this->extractName($request);
+        if (empty($name))
+            return JsonResponse::badRequest('"name" field is required');
+
+        return $this->userRepository->find($id)
+            ->then(
+                function (array $user) use ($id, $name) {
+                    if (empty($user))
+                        return JsonResponse::notFound('user not found with id : ' . $id);
+
+                    $user['name'] = $name;
+
+                    return $this->userRepository->update($user)
+                        ->then(function () {
+                            return JsonResponse::ok();
+                        });
+                }, function (Exception $e) {
+                return JsonResponse::badRequest($e->getMessage());
+            });
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return string|null
+     */
+    private function extractName(ServerRequestInterface $request): ?string
+    {
+        $params = $request->getParsedBody();
+        return $params['name'] ?? null;
     }
 }

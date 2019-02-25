@@ -59,4 +59,12 @@ class UserRepository
             [$user->getName(), $user->getEmail()]
         );
     }
+
+    public function update(array $user): PromiseInterface
+    {
+        return $this->db->query(
+        'UPDATE `user` SET `name` = ? WHERE `id` = ?',
+            [$user['name'], $user['id']]
+        );
+    }
 }
